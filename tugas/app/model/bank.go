@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"tugasmvc/app/constant"
 	"tugasmvc/app/utils"
 
 	"github.com/dgrijalva/jwt-go"
@@ -146,7 +147,7 @@ func Withdraw(transaction Transaction) (bool, error) {
 func Deposit(transaction Transaction) (bool, error) {
 	err := DB.Transaction(func(tx *gorm.DB) error {
 		var sender Account
-		if err := tx.Mode1(&Account{}).Where(&Account{AccountNumber: transaction.Sender}).First(&sender).
+		if err := tx.Model(&Account{}).Where(&Account{AccountNumber: transaction.Sender}).First(&sender).
 			Update("saldo", sender.Saldo+transaction.Amount).Error; err != nil {
 			// return any error will rollback
 			return err
@@ -162,5 +163,5 @@ func Deposit(transaction Transaction) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return true, ni1
+	return true, nil
 }
