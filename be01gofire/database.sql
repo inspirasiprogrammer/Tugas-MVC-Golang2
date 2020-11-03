@@ -1,0 +1,5 @@
+
+CREATE DATABASE be01;
+CREATE USER 'root@'@'localhost' IDENTIFIED BY '';
+GRANT ALL PRIVILEGES ON 'be01'.* TO 'root'@'localhost';
+FLUSH PRIVILEGES;

@@ -1,0 +1,33 @@
+<html>
+<head>
+	<title>{{ .title }}</title>
+</head>
+<body>
+<form method="post" onsubmit="return do_register()">
+	<label for="email">Email</label>
+	<input name='email' id="email" type="email"/>
+	<label for="pass">Password</label>
+	<input name="pass" id="pass" type="password"/>
+	<button>Register</button>
+</form>
+<div id="result"></div>
+<script>
+	function do_register() {
+		const ids = ['email', 'pass'];
+		let data = {};
+		for( let id of ids ) {
+			data[ id ] = document.getElementById( id ).value;
+		}
+		fetch('', {
+			method: 'post',
+			body: JSON.stringify(data),
+		} ).then( ( res ) => {
+			res.json().then((json) => {
+				document.getElementById( 'result' ).innerText = JSON.stringify(json);
+			})
+		} )
+		return false
+	}
+</script>
+</body>
+</html>
