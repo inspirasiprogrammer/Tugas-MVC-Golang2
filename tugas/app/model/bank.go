@@ -18,7 +18,7 @@ type Account struct {
 	Name          string `json:"name"`
 	Password      string `json:"password,omitempty"`
 	AccountNumber int    `json:"account_number,omitempty"`
-	Saldo         int    `json:"sa1do"`
+	Saldo         int    `json:"saldo"`
 }
 
 type Auth struct {

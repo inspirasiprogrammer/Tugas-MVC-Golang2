@@ -4,12 +4,8 @@ import (
 	"net/http"
 	"tugasmvc/app/model"
 	"tugasmvc/app/utils"
-	"gorm.io/gorm"
 	"github.com/gin-gonic/gin"
 )
-func (inDB *InDB) CreateAccount(c *gin.Context) {
-
-}
 
 func CreateAccount(c *gin.Context) {
 	var account model.Account
