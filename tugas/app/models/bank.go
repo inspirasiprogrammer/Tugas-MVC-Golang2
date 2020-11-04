@@ -2,58 +2,59 @@ package models
 
 import (
 	"time"
-	"gorm.io/gorm"
-	"tugasmvc2/app/utils"
 	"tugasmvc2/app/constant"
+	"tugasmvc2/app/utils"
+
+	"gorm.io/gorm"
+
 	// "tugasmvc2/app/config"
-	"github.com/pkg/errors"
-	"github.com/dgrijalva/jwt-go"
 	"fmt"
 	"log"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 	// "reflect"
 )
 
 type Account struct {
-	ID int 				`gorm:"primary_key" json:"-"`
-	IdAccount string 	`json:"id_account,omitempty"`
-	Name string 		`json:"name"`
-	Password string 	`json:"password,omitempty"`
-	AccountNumber int 	`json:"account_number,omitempty"`
-	Saldo int 			`json:"saldo"`
+	ID            int    `gorm:"primary_key" json:"-"`
+	IdAccount     string `json:"id_account,omitempty"`
+	Name          string `json:"name"`
+	Password      string `json:"password,omitempty"`
+	AccountNumber int    `json:"account_number,omitempty"`
+	Saldo         int    `json:"saldo"`
 }
 
 type Auth struct {
-	Name string 		`json:"name"`
-	Password string 	`json:"password"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 type Transaction struct {
-	ID 				int 	`gorm:"primary_key" json:"-"`
-	TransactionType int 	`json:"transaction_type,omitempty"`
-	TransactionDescription 			string 	`json:"transaction_description"`
-	Sender int 	`json:"sender"`
-	Amount int 	`json:"amount"`
-	Recipient int 			`json:"recipient"`
-	Timestamp int64 			`json:"timestamp,omitempty"`
+	ID                     int    `gorm:"primary_key" json:"-"`
+	TransactionType        int    `json:"transaction_type,omitempty"`
+	TransactionDescription string `json:"transaction_description"`
+	Sender                 int    `json:"sender"`
+	Amount                 int    `json:"amount"`
+	Recipient              int    `json:"recipient"`
+	Timestamp              int64  `json:"timestamp,omitempty"`
 }
 
-
-func Login(auth Auth) (bool, error, string){
+func Login(auth Auth) (bool, error, string) {
 	var account Account
-	if err := DB.Where(&Account{Name: auth.Name}).First(&account).Error;
-		err != nil {
-			if err == gorm.ErrRecordNotFound{
-				return false,errors.Errorf("Account Not Found"),""
+	if err := DB.Where(&Account{Name: auth.Name}).First(&account).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, errors.Errorf("Account Not Found"), ""
 
-			}
 		}
-	
+	}
+
 	err := utils.HashComparator([]byte(account.Password), []byte(auth.Password))
 	if err != nil {
 		return false, errors.Errorf("Incorect Password"), ""
 	} else {
 		sign := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"name": auth.Name,
+			"name":           auth.Name,
 			"account_number": account.AccountNumber,
 		})
 
@@ -62,14 +63,14 @@ func Login(auth Auth) (bool, error, string){
 			return false, err, ""
 		}
 
-		return true,nil,token
+		return true, nil, token
 	}
 }
 
-func InsertNewAccount(account Account) (bool, error){
+func InsertNewAccount(account Account) (bool, error) {
 	account.AccountNumber = utils.RangeIn(111111, 999999)
 	// account.Saldo = 0
-	account.IdAccount = fmt.Sprintf("id-%d",utils.RangeIn(111, 999))
+	account.IdAccount = fmt.Sprintf("id-%d", utils.RangeIn(111, 999))
 	if err := DB.Create(&account).Error; err != nil {
 		return false, errors.Errorf("invalid prepare statement :%+v\n", err)
 	}
@@ -81,40 +82,67 @@ func GetAccountDetail(idAccount int) (bool, error, []Transaction, Account) {
 	var transaction []Transaction
 	var account Account
 
-	if err := DB.Where("sender = ? OR recipient = ?", 
-					idAccount, idAccount).Find(&transaction).Error;
-		err != nil {
-			if err == gorm.ErrRecordNotFound{
-				return false,errors.Errorf("Account Not Found"), []Transaction{}, Account{}
-			} else {
-				return false,errors.Errorf("Invalid prepare statement :%+v\n", err), []Transaction{}, Account{}
-			}
+	if err := DB.Where("sender = ? OR recipient = ?",
+		idAccount, idAccount).Find(&transaction).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, errors.Errorf("Account Not Found"), []Transaction{}, Account{}
+		} else {
+			return false, errors.Errorf("Invalid prepare statement :%+v\n", err), []Transaction{}, Account{}
 		}
+	}
 
-	if err := DB.Where(&Account{AccountNumber: idAccount}).Find(&account).Error;
-		err != nil {
-			if err == gorm.ErrRecordNotFound{
-				return false,errors.Errorf("Accout not Found"), []Transaction{}, Account{}
-			} else {
-				return false,errors.Errorf("Invalid prepare statement :%+v\n", err), []Transaction{}, Account{}
-			}
+	if err := DB.Where(&Account{AccountNumber: idAccount}).Find(&account).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, errors.Errorf("Accout not Found"), []Transaction{}, Account{}
+		} else {
+			return false, errors.Errorf("Invalid prepare statement :%+v\n", err), []Transaction{}, Account{}
 		}
+	}
 
-	return true,nil, transaction,Account{
-		IdAccount: account.IdAccount,
-		Name: account.Name,
+	return true, nil, transaction, Account{
+		IdAccount:     account.IdAccount,
+		Name:          account.Name,
 		AccountNumber: account.AccountNumber,
-		Saldo: account.Saldo,
+		Saldo:         account.Saldo,
+	}
+}
+
+func GetAccountMutasiLast(idAccount int) (bool, error, []Transaction, Account) {
+	var transaction []Transaction
+	var account Account
+
+	if err := DB.Where("sender = ? OR recipient = ?",
+		idAccount, idAccount).Order("id desc").Limit(30).Find(&transaction).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, errors.Errorf("Account Not Found"), []Transaction{}, Account{}
+		} else {
+			return false, errors.Errorf("Invalid prepare statement :%+v\n", err), []Transaction{}, Account{}
+		}
+	}
+
+	if err := DB.Where(&Account{AccountNumber: idAccount}).Find(&account).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, errors.Errorf("Accout not Found"), []Transaction{}, Account{}
+		} else {
+			return false, errors.Errorf("Invalid prepare statement :%+v\n", err), []Transaction{}, Account{}
+		}
+	}
+
+	return true, nil, transaction, Account{
+		IdAccount:     account.IdAccount,
+		Name:          account.Name,
+		AccountNumber: account.AccountNumber,
+		Saldo:         account.Saldo,
 	}
 }
 
 func Transfer(transaction Transaction) (bool, error) {
 	err := DB.Transaction(func(tx *gorm.DB) error {
 		// do some database operations in the transaction (use 'tx' from this point, not 'db')
-		var sender,recipient Account
+		var sender, recipient Account
 		if err := tx.Model(&Account{}).Where(&Account{AccountNumber: transaction.Sender}).
 			First(&sender).
-			Update("saldo", sender.Saldo - transaction.Amount).Error; err != nil {
+			Update("saldo", sender.Saldo-transaction.Amount).Error; err != nil {
 			// return any error will rollback
 			return err
 		}
@@ -127,18 +155,19 @@ func Transfer(transaction Transaction) (bool, error) {
 		}
 		transaction.TransactionType = constant.TRANSFER
 		transaction.Timestamp = time.Now().Unix()
-		if err := tx.Create(&transaction).Error;err != nil {
+		if err := tx.Create(&transaction).Error; err != nil {
 			return err
 		}
 		// return nil will commit the whole transaction
 		return nil
-	});if err != nil {
+	})
+	if err != nil {
 		return false, err
 	}
-	return true,nil
+	return true, nil
 }
 
-func Withdraw (transaction Transaction) (bool,error){
+func Withdraw(transaction Transaction) (bool, error) {
 	err := DB.Transaction(func(tx *gorm.DB) error {
 		var sender Account
 		if err := tx.Model(&Account{}).Where(&Account{AccountNumber: transaction.Sender}).
@@ -149,18 +178,19 @@ func Withdraw (transaction Transaction) (bool,error){
 		}
 		transaction.TransactionType = constant.WITHDRAW
 		transaction.Timestamp = time.Now().Unix()
-		if err := tx.Create(&transaction).Error;err != nil {
+		if err := tx.Create(&transaction).Error; err != nil {
 			return err
 		}
 		return nil
-	});if err != nil {
+	})
+	if err != nil {
 		return false, err
 	}
 
-	return true,nil
+	return true, nil
 }
 
-func Deposit (transaction Transaction) (bool,error){
+func Deposit(transaction Transaction) (bool, error) {
 	err := DB.Transaction(func(tx *gorm.DB) error {
 		var sender Account
 		if err := tx.Model(&Account{}).Where(&Account{AccountNumber: transaction.Sender}).
@@ -171,42 +201,44 @@ func Deposit (transaction Transaction) (bool,error){
 		}
 		transaction.TransactionType = constant.DEPOSIT
 		transaction.Timestamp = time.Now().Unix()
-		if err := tx.Create(&transaction).Error;err != nil {
+		if err := tx.Create(&transaction).Error; err != nil {
 			// return any error will rollback
 			return err
 		}
 		return nil
-	});if err != nil {
+	})
+	if err != nil {
 		return false, err
 	}
 
-	return true,nil
+	return true, nil
 }
 
-func Interest (transaction Transaction) (bool,error){
+func Interest(transaction Transaction) (bool, error) {
 	err := DB.Transaction(func(tx *gorm.DB) error {
 		// var account Account
-		var result []map[string]interface{} 
+		var result []map[string]interface{}
 		tx.Model(&Account{}).Find(&result)
 		// fmt.Println(result[1]["saldo"])
 		for i, hasil := range result {
-			if err := tx.Model(&Account{}).Where(&Account{ID: i+1}).
+			if err := tx.Model(&Account{}).Where(&Account{ID: i + 1}).
 				Update("saldo", hasil["saldo"].(int)+(hasil["saldo"].(int)*2/100)).Error; err != nil {
 				// return any error will rollback
 				return err
 			}
-			// fmt.Println(reflect.TypeOf(hasil["saldo"]), i)	
+			// fmt.Println(reflect.TypeOf(hasil["saldo"]), i)
 		}
 		transaction.TransactionType = constant.INTEREST
 		transaction.Timestamp = time.Now().Unix()
-		if err := tx.Create(&transaction).Error;err != nil {
+		if err := tx.Create(&transaction).Error; err != nil {
 			// return any error will rollback
 			return err
 		}
 		return nil
-	});if err != nil {
+	})
+	if err != nil {
 		return false, err
 	}
 
-	return true,nil
+	return true, nil
 }

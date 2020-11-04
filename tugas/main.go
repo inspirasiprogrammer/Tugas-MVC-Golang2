@@ -15,8 +15,8 @@ func main() {
 	cfg := cors.DefaultConfig()
 	cfg.AllowAllOrigins = true
 	cfg.AllowCredentials = true
-	cfg.AllowMethods = []string{"GET","POST"}
-	cfg.AllowHeaders = []string{"Authorization","Origin","Accept","X-Requested-With"," Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"}
+	cfg.AllowMethods = []string{"GET", "POST"}
+	cfg.AllowHeaders = []string{"Authorization", "Origin", "Accept", "X-Requested-With", " Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"}
 	router.Use(cors.New(cfg))
 
 	//router.Use(cors.Default())
@@ -27,5 +27,6 @@ func main() {
 	router.POST("/api/v1/withdraw", middleware.Auth, controllers.Withdraw)
 	router.POST("/api/v1/deposit", middleware.Auth, controllers.Deposit)
 	router.POST("/api/v1/interest", middleware.Auth, controllers.Interest)
+	router.GET("/api/v1/mutasi", middleware.Auth, controllers.GetAccountMutasi)
 	router.Run(":8080")
 }
