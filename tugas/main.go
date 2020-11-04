@@ -10,7 +10,16 @@ import (
 
 func main() {
 	router := gin.Default()
-	router.Use(cors.Default())
+
+	// add CORS
+	cfg := cors.DefaultConfig()
+	cfg.AllowAllOrigins = true
+	cfg.AllowCredentials = true
+	cfg.AllowMethods = []string{"GET","POST"}
+	cfg.AllowHeaders = []string{"Authorization","Origin","Accept","X-Requested-With"," Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"}
+	router.Use(cors.New(cfg))
+
+	//router.Use(cors.Default())
 	router.POST("/api/v1/account/add", controllers.CreateAccount)
 	router.POST("/api/v1/login", controllers.Login)
 	router.GET("/api/v1/account", middleware.Auth, controllers.GetAccount)
