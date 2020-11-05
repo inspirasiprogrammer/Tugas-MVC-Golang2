@@ -1,20 +1,33 @@
-FROM golang:latest
+FROM golang:alpine
 
-# Set the Current Working Directory inside the container
-WORKDIR $GOPATH/src/github.com/inspirasiprogrammer/Tugas-MVC-Golang2
+# Set necessary environmet variables needed for our image
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
-# Copy everything from the current directory to the PWD(Present Working Directory) inside the container
+# Move to working directory /build
+WORKDIR /build
+
+# Copy and download dependency using go mod
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# Copy the code into the container
 COPY . .
 
-# Download all the dependencies
-RUN go get -d -v ./...
+# Build the application
+RUN go build -o main .
 
-# Install the package
-RUN go install -v ./...
+# Move to /dist directory as the place for resulting binary folder
+WORKDIR /dist
 
-# This container exposes port 8080 to the outside world
-EXPOSE 8080
+# Copy binary from build to main folder
+RUN cp /build/main .
 
-# Run the executable
-CMD ["go-sample-app"]
+# Export necessary port
+EXPOSE 3000
 
+# Command to run when starting the container
+CMD ["/dist/main"]
