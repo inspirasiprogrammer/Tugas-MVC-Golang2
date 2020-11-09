@@ -28,5 +28,5 @@ func main() {
 	router.POST("/api/v1/deposit", middleware.Auth, controllers.Deposit)
 	router.POST("/api/v1/interest", middleware.Auth, controllers.Interest)
 	router.GET("/api/v1/mutasi", middleware.Auth, controllers.GetAccountMutasi)
-	router.Run(":8080")
+	router.Run(":8081")
 }

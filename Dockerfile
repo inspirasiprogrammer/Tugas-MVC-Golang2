@@ -21,6 +21,6 @@ WORKDIR /dist
 
 COPY --from=builder /go/src/app/main .
 
-EXPOSE 8080
+EXPOSE 8081
 
 CMD ["./main"]
